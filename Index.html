@@ -1,0 +1,2690 @@
+<!DOCTYPE html>
+<!-- Scientific Calculator (Casio fx-82MS style) | Made by Keshav Mishra, B.Tech CSE Student -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#202124">
+    <meta name="author" content="Keshav Mishra">
+    <meta name="description"
+        content="Scientific calculator (Casio fx-82MS style) with graph, equation solver, statistics, unit converter and more. Made by Keshav Mishra.">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🧮%3C/text%3E%3C/svg%3E">
+    <title>Scientific Calculator</title>
+
+    <style>
+        /* ---------- Colors (dark theme by default) ---------- */
+        :root {
+            color-scheme: dark;
+            --bg: #202124;
+            --panel: #26272b;
+            --key: #2f3136;
+            --key-num: #3c4043;
+            --text: #e8eaed;
+            --muted: #9aa0a6;
+            --blue: #3b6ef6;
+            --line: #44474c;
+            --red: #f28b82;
+            --card: #2b2d31;
+            --ok: #81c995;
+            --graph-bg: #1b1c1f;
+            --graph-grid: #34363b;
+        }
+
+        body.light {
+            color-scheme: light;
+            --bg: #f1f3f4;
+            --panel: #ffffff;
+            --key: #e3e6ea;
+            --key-num: #f8f9fa;
+            --text: #202124;
+            --muted: #5f6368;
+            --blue: #1a56db;
+            --line: #d0d4d9;
+            --red: #c5221f;
+            --card: #f6f7f9;
+            --ok: #188038;
+            --graph-bg: #ffffff;
+            --graph-grid: #e3e6ea;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+            -webkit-text-size-adjust: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        header {
+            max-width: 1100px;
+            margin: 0 auto 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .layout {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 520px) minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        /* ---------- Display ---------- */
+        .display {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 10px 16px 12px;
+            margin-bottom: 12px;
+        }
+
+        .status {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            height: 24px;
+            font-size: 12px;
+        }
+
+        .status span {
+            padding: 1px 8px;
+            border-radius: 10px;
+            color: var(--muted);
+            opacity: 0.4;
+        }
+
+        .status span.on {
+            opacity: 1;
+            background: var(--blue);
+            color: #fff;
+        }
+
+        .tiny {
+            margin-left: auto;
+            background: var(--key);
+            color: var(--text);
+            border: 0;
+            border-radius: 12px;
+            padding: 3px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        #expr {
+            width: 100%;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: var(--text);
+            font-size: 22px;
+            font-family: inherit;
+            text-align: right;
+            padding: 4px 0;
+        }
+
+        #result {
+            font-size: 42px;
+            text-align: right;
+            min-height: 54px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        #result.error {
+            color: var(--red);
+            font-size: 28px;
+            padding-top: 10px;
+        }
+
+        /* ---------- Keys ---------- */
+        .keys {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+
+        .keys button {
+            height: 46px;
+            padding: 0;
+            border: 0;
+            border-radius: 23px;
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+            touch-action: manipulation;
+            /* no double-tap zoom on phones */
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            background: var(--key);
+            color: var(--text);
+            font-size: 15px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        @media (hover: hover) {
+            .keys button:hover {
+                filter: brightness(1.15);
+            }
+        }
+
+        .keys button:active {
+            transform: scale(0.96);
+        }
+
+        .keys .num {
+            background: var(--key-num);
+            font-size: 18px;
+        }
+
+        .keys .eq {
+            background: var(--blue);
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .keys .red {
+            color: var(--red);
+        }
+
+        .keys button.on {
+            color: var(--blue);
+            outline: 2px solid var(--blue);
+        }
+
+        .tip {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 12px;
+        }
+
+        /* ---------- Side panel ---------- */
+        .side {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 14px;
+            min-height: 300px;
+            min-width: 0;
+        }
+
+        /* tab bar (scrolls sideways on small screens) */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+            scrollbar-width: thin;
+        }
+
+        .tabs button {
+            flex: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid transparent;
+            border-radius: 999px;
+            padding: 7px 13px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tabs button:hover {
+            background: var(--key);
+            color: var(--text);
+        }
+
+        .tabs button.active {
+            background: var(--blue);
+            color: #fff;
+        }
+
+        .tab {
+            display: none;
+        }
+
+        .tab.active {
+            display: block;
+            animation: tabIn 0.2s ease-out;
+        }
+
+        @keyframes tabIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .tab-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .tab-head h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .hint {
+            margin: 4px 0 0;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        /* a card = one tool inside a tab */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .card .formula {
+            margin: 3px 0 12px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .card .formula b {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        /* ---------- Form parts ---------- */
+        .lbl {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0 0 5px;
+        }
+
+        .f {
+            width: 100%;
+            background: var(--key-num);
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 10px;
+            font-size: 15px;
+            font-family: inherit;
+            min-width: 0;
+        }
+
+        .f:focus {
+            outline: 2px solid var(--blue);
+            outline-offset: 0;
+            border-color: transparent;
+        }
+
+        textarea.f {
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        select.f {
+            cursor: pointer;
+        }
+
+        .grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .g2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .g4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        /* equation rows:  [a] x + [b] y = [c] */
+        .eqrow {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .eqrow .f {
+            flex: 1;
+            padding: 8px 6px;
+            text-align: center;
+        }
+
+        .btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .main {
+            background: var(--blue);
+            color: #fff;
+            border: 0;
+            border-radius: 999px;
+            padding: 9px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .main:hover {
+            filter: brightness(1.1);
+        }
+
+        .ghost {
+            background: var(--key);
+            color: var(--text);
+            border: 0;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .ghost:hover {
+            filter: brightness(1.15);
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0 2px;
+        }
+
+        .chip {
+            background: var(--key);
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 4px 11px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .chip:hover {
+            border-color: var(--blue);
+        }
+
+        /* ---------- Results ---------- */
+        .tiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .tile {
+            display: block;
+            text-align: left;
+            background: var(--key-num);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 11px;
+            color: var(--text);
+            font-family: inherit;
+            min-width: 0;
+        }
+
+        button.tile {
+            cursor: pointer;
+        }
+
+        button.tile:hover {
+            border-color: var(--blue);
+        }
+
+        .tile .k {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
+
+        .tile .v {
+            display: block;
+            font-size: 17px;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .tile .a {
+            display: block;
+            font-size: 11px;
+            color: var(--blue);
+            margin-top: 3px;
+        }
+
+        .tile.good {
+            border-color: var(--ok);
+        }
+
+        .tile.good .v {
+            color: var(--ok);
+        }
+
+        .msg {
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .msg.err {
+            color: var(--red);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--muted);
+            padding: 30px 12px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .empty-state .big-icon {
+            font-size: 34px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        /* ---------- History ---------- */
+        #historyList {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-height: 460px;
+            overflow: auto;
+        }
+
+        .h-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .h-item:hover {
+            border-color: var(--blue);
+        }
+
+        .h-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .h-expr {
+            color: var(--muted);
+            font-size: 13px;
+            word-break: break-all;
+        }
+
+        .h-val {
+            font-size: 21px;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        /* ---------- Graph ---------- */
+        canvas {
+            display: block;
+            width: 100%;
+            aspect-ratio: 10 / 7;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            touch-action: pan-y;
+        }
+
+        .graph-read {
+            margin-top: 8px;
+            min-height: 20px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        /* ---------- Units ---------- */
+        .big-out {
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 12px;
+            background: var(--key-num);
+            border: 1px solid var(--blue);
+        }
+
+        .big-out .from {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .big-out .to {
+            font-size: 26px;
+            font-weight: 600;
+            margin-top: 2px;
+            word-break: break-word;
+        }
+
+        .swap {
+            padding: 8px 12px;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .unit-row {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 8px;
+            align-items: end;
+        }
+
+        /* ---------- Constants ---------- */
+        .const-list {
+            max-height: 480px;
+            overflow: auto;
+            border-radius: 12px;
+        }
+
+        .const-group {
+            position: sticky;
+            top: 0;
+            background: var(--panel);
+            color: var(--blue);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 10px 4px 6px;
+            z-index: 1;
+        }
+
+        .const-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            text-align: left;
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 12px;
+            margin-bottom: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .const-item:hover {
+            border-color: var(--blue);
+        }
+
+        .const-item .name {
+            min-width: 0;
+        }
+
+        .const-item small {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 1px;
+        }
+
+        .const-item .val {
+            text-align: right;
+            font-size: 13px;
+            font-weight: 600;
+            word-break: break-all;
+            flex: none;
+            max-width: 52%;
+        }
+
+        .const-item .val small {
+            font-weight: 400;
+        }
+
+        /* ---------- Toast (small message at the bottom) ---------- */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: calc(24px + env(safe-area-inset-bottom));
+            transform: translate(-50%, 20px);
+            background: var(--text);
+            color: var(--bg);
+            padding: 9px 18px;
+            border-radius: 999px;
+            font-size: 14px;
+            max-width: 90vw;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 50;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        #result.preview {
+            color: var(--muted);
+        }
+
+        /* ---------- Credit (bottom corner) ---------- */
+        .credit {
+            max-width: 1100px;
+            margin: 22px auto 0;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+            text-align: right;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .credit b {
+            color: var(--blue);
+            font-weight: 600;
+        }
+
+        /* keyboard users get a clear outline */
+        button:focus-visible,
+        .f:focus-visible {
+            outline: 2px solid var(--blue);
+            outline-offset: 2px;
+        }
+
+        /* ---------- Phones ---------- */
+        @media (max-width: 600px) {
+            body {
+                padding: 12px 12px calc(16px + env(safe-area-inset-bottom));
+            }
+
+            h1 {
+                font-size: 18px;
+            }
+
+            .display {
+                padding: 8px 12px 10px;
+                border-radius: 12px;
+            }
+
+            #expr {
+                font-size: 20px;
+            }
+
+            #result {
+                font-size: 34px;
+                min-height: 46px;
+            }
+
+            .keys {
+                gap: 6px;
+            }
+
+            .keys button {
+                height: 44px;
+                font-size: 13px;
+                border-radius: 22px;
+            }
+
+            .keys .num {
+                font-size: 17px;
+            }
+
+            .keys .eq {
+                font-size: 18px;
+            }
+
+            .side {
+                padding: 12px;
+            }
+
+            .card {
+                padding: 12px;
+            }
+
+            .tabs {
+                flex-wrap: nowrap;
+            }
+
+            .tabs button {
+                padding: 7px 11px;
+                font-size: 13px;
+            }
+
+            .f {
+                font-size: 16px;
+            }
+
+            /* 16px stops iPhones from zooming into the box */
+            .g4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .tiles {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .unit-row {
+                grid-template-columns: 1fr;
+            }
+
+            .swap {
+                width: 100%;
+            }
+
+            .big-out .to {
+                font-size: 22px;
+            }
+
+            #historyList,
+            .const-list {
+                max-height: 360px;
+            }
+
+            .const-item .val {
+                max-width: 46%;
+            }
+
+            .credit {
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .keys {
+                gap: 5px;
+            }
+
+            .keys button {
+                font-size: 12px;
+            }
+
+            .keys .num {
+                font-size: 16px;
+            }
+
+            .eqrow {
+                gap: 3px;
+                font-size: 13px;
+            }
+
+            .eqrow .f {
+                padding: 8px 2px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div>
+            <h1>Scientific Calculator</h1>
+            <div class="subtitle">Made by Keshav Mishra</div>
+        </div>
+        <button class="tiny" id="themeBtn" style="margin-left:0">Light / Dark</button>
+    </header>
+
+    <main class="layout">
+
+        <!-- ================= Calculator ================= -->
+        <section>
+            <div class="display">
+                <div class="status">
+                    <span id="stDeg">DEG</span>
+                    <span id="stInv">INV</span>
+                    <span id="stHyp">HYP</span>
+                    <span id="stMem">M</span>
+                    <button class="tiny" id="copyBtn">Copy</button>
+                </div>
+                <input id="expr" type="text" inputmode="none" autocomplete="off" spellcheck="false" placeholder="0">
+                <div id="result">0</div>
+            </div>
+
+            <!--
+      data-v   = text that is typed into the screen
+      data-inv = text typed when INV is ON
+      data-hyp = text typed when HYP is ON
+      data-act = a special action (not typed on screen)
+    -->
+            <div class="keys" id="keys">
+                <button data-act="inv" id="invBtn">INV</button>
+                <button data-act="hyp" id="hypBtn">HYP</button>
+                <button data-act="mode" id="modeBtn">DEG</button>
+                <button data-act="frac">S⇔D</button>
+                <button data-act="mc">MC</button>
+                <button data-act="mr">MR</button>
+
+                <button data-v="sin(" data-inv="asin(" data-hyp="sinh(" data-invhyp="asinh(">sin</button>
+                <button data-v="cos(" data-inv="acos(" data-hyp="cosh(" data-invhyp="acosh(">cos</button>
+                <button data-v="tan(" data-inv="atan(" data-hyp="tanh(" data-invhyp="atanh(">tan</button>
+                <button data-v="log(" data-inv="10^(">log</button>
+                <button data-v="ln(" data-inv="e^(">ln</button>
+                <button data-act="mplus">M+</button>
+
+                <button data-v="²">x²</button>
+                <button data-v="³">x³</button>
+                <button data-v="^" data-inv="ˣ√">xʸ</button>
+                <button data-v="√(">√</button>
+                <button data-v="∛(">∛</button>
+                <button data-act="mminus">M−</button>
+
+                <button data-v="!">x!</button>
+                <button data-v="P" data-inv="C">nPr</button>
+                <button data-v="abs(">Abs</button>
+                <button data-v="(">(</button>
+                <button data-v=")">)</button>
+                <button data-v="%">%</button>
+
+                <button class="num" data-v="7">7</button>
+                <button class="num" data-v="8">8</button>
+                <button class="num" data-v="9">9</button>
+                <button class="red" data-act="del">DEL</button>
+                <button class="red" data-act="ac">AC</button>
+                <button data-v="π">π</button>
+
+                <button class="num" data-v="4">4</button>
+                <button class="num" data-v="5">5</button>
+                <button class="num" data-v="6">6</button>
+                <button data-v="×">×</button>
+                <button data-v="÷">÷</button>
+                <button data-v="e">e</button>
+
+                <button class="num" data-v="1">1</button>
+                <button class="num" data-v="2">2</button>
+                <button class="num" data-v="3">3</button>
+                <button data-v="+">+</button>
+                <button data-v="−">−</button>
+                <button data-v="E">EXP</button>
+
+                <button class="num" data-v="0">0</button>
+                <button class="num" data-v=".">.</button>
+                <button data-v="^(-1)">x⁻¹</button>
+                <button data-v="Ans">Ans</button>
+                <button data-v="Ran#">Ran#</button>
+                <button class="eq" data-act="eq">=</button>
+            </div>
+
+            <p class="tip">
+                Keyboard also works: type numbers and functions directly, <b>Enter</b> = equals, <b>Esc</b> = clear.
+                Pressing an operator after "=" continues from the last answer.
+                The grey number under the screen is a live preview of your answer.
+            </p>
+        </section>
+
+        <!-- ================= Side panel ================= -->
+        <aside class="side">
+            <nav class="tabs" aria-label="More tools">
+                <button class="active" data-tab="history">🕘 History</button>
+                <button data-tab="graph">📈 Graph</button>
+                <button data-tab="equation">✏️ Equations</button>
+                <button data-tab="stats">📊 Statistics</button>
+                <button data-tab="base">🔢 Number Base</button>
+                <button data-tab="units">📏 Units</button>
+                <button data-tab="constants">⚛️ Constants</button>
+            </nav>
+
+            <!-- ===== History ===== -->
+            <section class="tab active" id="tab-history">
+                <div class="tab-head">
+                    <div>
+                        <h2>History</h2>
+                        <p class="hint">Your last 50 calculations. Tap a row to bring it back to the screen.</p>
+                    </div>
+                    <button class="ghost" id="clearHistory">Clear</button>
+                </div>
+                <ul id="historyList"></ul>
+            </section>
+
+            <!-- ===== Graph ===== -->
+            <section class="tab" id="tab-graph">
+                <div class="tab-head">
+                    <div>
+                        <h2>Graph</h2>
+                        <p class="hint">Draw one or two functions of <b>x</b>. Move the mouse (or finger) over the graph
+                            to read values.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <label class="lbl" for="gFunc"><span class="dot" style="background:#8ab4f8"></span>f₁(x) =</label>
+                    <input class="f" id="gFunc" value="sin(x)" placeholder="e.g. x^2 - 4" autocomplete="off"
+                        spellcheck="false">
+                    <label class="lbl" for="gFunc2" style="margin-top:10px"><span class="dot"
+                            style="background:#fcad70"></span>f₂(x) = <span style="opacity:.7">(optional)</span></label>
+                    <input class="f" id="gFunc2" value="" placeholder="e.g. cos(x)" autocomplete="off"
+                        spellcheck="false">
+
+                    <div class="chips" id="graphChips">
+                        <button class="chip" data-f="sin(x)">sin x</button>
+                        <button class="chip" data-f="x²">x²</button>
+                        <button class="chip" data-f="x³−3x">x³ − 3x</button>
+                        <button class="chip" data-f="tan(x)">tan x</button>
+                        <button class="chip" data-f="1÷x">1/x</button>
+                        <button class="chip" data-f="e^(x)">eˣ</button>
+                        <button class="chip" data-f="ln(x)">ln x</button>
+                        <button class="chip" data-f="√(x)">√x</button>
+                    </div>
+
+                    <div class="grid g4" style="margin-top:10px">
+                        <div><label class="lbl" for="gxmin">x min</label><input class="f" id="gxmin" value="-10"
+                                inputmode="decimal"></div>
+                        <div><label class="lbl" for="gxmax">x max</label><input class="f" id="gxmax" value="10"
+                                inputmode="decimal"></div>
+                        <div><label class="lbl" for="gymin">y min</label><input class="f" id="gymin" value="-5"
+                                inputmode="decimal"></div>
+                        <div><label class="lbl" for="gymax">y max</label><input class="f" id="gymax" value="5"
+                                inputmode="decimal"></div>
+                    </div>
+
+                    <div class="btns">
+                        <button class="main" id="plotBtn">Plot</button>
+                        <button class="ghost" id="zoomIn">Zoom +</button>
+                        <button class="ghost" id="zoomOut">Zoom −</button>
+                        <button class="ghost" id="zoomReset">Reset</button>
+                    </div>
+                </div>
+
+                <canvas id="graph" width="500" height="350"></canvas>
+                <div class="graph-read" id="graphRead"></div>
+                <div class="msg err" id="graphMsg" style="margin-top:6px"></div>
+                <p class="hint">The graph always works in radians, so sin(x) uses x in radians.</p>
+            </section>
+
+            <!-- ===== Equations ===== -->
+            <section class="tab" id="tab-equation">
+                <div class="tab-head">
+                    <div>
+                        <h2>Equation Solver</h2>
+                        <p class="hint">Fill the numbers and press Solve. Tap an answer to put it into the calculator.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Quadratic equation</h3>
+                    <p class="formula"><b>ax² + bx + c = 0</b></p>
+                    <div class="eqrow">
+                        <input class="f" type="number" step="any" id="qa" placeholder="a" aria-label="a">x² +
+                        <input class="f" type="number" step="any" id="qb" placeholder="b" aria-label="b">x +
+                        <input class="f" type="number" step="any" id="qc" placeholder="c" aria-label="c"> = 0
+                    </div>
+                    <div class="btns">
+                        <button class="main" id="solveQuad">Solve</button>
+                        <button class="ghost" id="quadEx">Try example</button>
+                    </div>
+                    <div id="quadOut"></div>
+                </div>
+
+                <div class="card">
+                    <h3>2 equations, 2 unknowns</h3>
+                    <p class="formula"><b>a₁x + b₁y = c₁</b> and <b>a₂x + b₂y = c₂</b></p>
+                    <div id="lin2Rows"></div>
+                    <div class="btns">
+                        <button class="main" id="solveLin2">Solve</button>
+                        <button class="ghost" id="lin2Ex">Try example</button>
+                    </div>
+                    <div id="lin2Out"></div>
+                </div>
+
+                <div class="card">
+                    <h3>3 equations, 3 unknowns</h3>
+                    <p class="formula"><b>a x + b y + c z = d</b> (three rows)</p>
+                    <div id="lin3Rows"></div>
+                    <div class="btns">
+                        <button class="main" id="solveLin3">Solve</button>
+                        <button class="ghost" id="lin3Ex">Try example</button>
+                    </div>
+                    <div id="lin3Out"></div>
+                </div>
+            </section>
+
+            <!-- ===== Statistics ===== -->
+            <section class="tab" id="tab-stats">
+                <div class="tab-head">
+                    <div>
+                        <h2>Statistics</h2>
+                        <p class="hint">Type your data separated by commas, spaces or new lines. Tap a result to use it
+                            in the calculator.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <label class="lbl" for="statData">Your data</label>
+                    <textarea class="f" id="statData" rows="4" placeholder="4, 8, 15, 16, 23, 42"></textarea>
+                    <div class="btns">
+                        <button class="main" id="statBtn">Calculate</button>
+                        <button class="ghost" id="statEx">Try example</button>
+                    </div>
+                    <div id="statOut"></div>
+                </div>
+            </section>
+
+            <!-- ===== Number base ===== -->
+            <section class="tab" id="tab-base">
+                <div class="tab-head">
+                    <div>
+                        <h2>Number Base</h2>
+                        <p class="hint">Type a number, choose its base, and see it in Binary, Octal, Decimal and
+                            Hexadecimal. Tap a result to copy it.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="grid" style="grid-template-columns: 2fr 1fr">
+                        <div>
+                            <label class="lbl" for="baseValue">Number</label>
+                            <input class="f" id="baseValue" placeholder="e.g. 255" autocomplete="off"
+                                spellcheck="false">
+                        </div>
+                        <div>
+                            <label class="lbl" for="baseFrom">Its base</label>
+                            <select class="f" id="baseFrom">
+                                <option value="10">Decimal</option>
+                                <option value="2">Binary</option>
+                                <option value="8">Octal</option>
+                                <option value="16">Hex</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="baseOut"></div>
+                </div>
+            </section>
+
+            <!-- ===== Units ===== -->
+            <section class="tab" id="tab-units">
+                <div class="tab-head">
+                    <div>
+                        <h2>Unit Converter</h2>
+                        <p class="hint">Pick what you are measuring, then the units. The answer updates as you type.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <label class="lbl" for="unitType">What are you converting?</label>
+                    <select class="f" id="unitType"></select>
+
+                    <label class="lbl" for="unitValue" style="margin-top:12px">Value</label>
+                    <input class="f" type="number" step="any" id="unitValue" value="1" inputmode="decimal">
+
+                    <div class="unit-row" style="margin-top:12px">
+                        <div>
+                            <label class="lbl" for="unitFrom">From</label>
+                            <select class="f" id="unitFrom"></select>
+                        </div>
+                        <button class="ghost swap" id="unitSwap" title="Swap units" aria-label="Swap units">⇄</button>
+                        <div>
+                            <label class="lbl" for="unitTo">To</label>
+                            <select class="f" id="unitTo"></select>
+                        </div>
+                    </div>
+
+                    <div class="big-out">
+                        <div class="from" id="unitFromText"></div>
+                        <div class="to" id="unitToText"></div>
+                    </div>
+                    <div class="btns">
+                        <button class="main" id="unitUse">Use answer in calculator</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Same value in every unit</h3>
+                    <p class="formula" id="unitAllHint">Tap any box to put it in the calculator.</p>
+                    <div class="tiles" id="unitAll"></div>
+                </div>
+            </section>
+
+            <!-- ===== Constants ===== -->
+            <section class="tab" id="tab-constants">
+                <div class="tab-head">
+                    <div>
+                        <h2>Constants</h2>
+                        <p class="hint">Physics, chemistry, electronics, mechanics, thermodynamics and astronomy. Tap
+                            one to insert its value in the calculator.</p>
+                    </div>
+                </div>
+                <input class="f" id="constSearch" type="search"
+                    placeholder="Search: planck, gravity, electron, boltzmann..." autocomplete="off" spellcheck="false"
+                    style="margin-bottom:12px">
+                <div class="const-list" id="constList"></div>
+            </section>
+        </aside>
+    </main>
+
+    <footer class="credit">
+        Made by <b>Keshav Mishra</b> &middot; B.Tech CSE Student
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        /* =====================================================
+           1. STATE (values the calculator remembers)
+           ===================================================== */
+        let angleMode = 'DEG';     // DEG, RAD or GRAD
+        let invOn = false;         // INV key pressed?
+        let hypOn = false;         // HYP key pressed?
+        let memory = 0;            // M+ / M- / MR
+        let lastAnswer = 0;        // used by the "Ans" key
+        let lastValue = null;      // number currently shown in the result box
+        let showFraction = false;  // S<=>D toggle
+        let afterResult = false;   // true right after "=" was pressed
+        let history = [];
+
+        const $ = id => document.getElementById(id);
+        const input = $('expr');
+        const resultBox = $('result');
+
+        /* =====================================================
+           2. ERRORS and SMALL MATH HELPERS
+           ===================================================== */
+        class CalcError extends Error { }
+        const syntaxError = () => new CalcError('Syntax ERROR');
+        const mathError = () => new CalcError('Math ERROR');
+
+        function toRadians(x) {
+            if (angleMode === 'DEG') return x * Math.PI / 180;
+            if (angleMode === 'GRAD') return x * Math.PI / 200;
+            return x;
+        }
+        function fromRadians(x) {
+            if (angleMode === 'DEG') return x * 180 / Math.PI;
+            if (angleMode === 'GRAD') return x * 200 / Math.PI;
+            return x;
+        }
+        // sin(180°) gives 1.2e-16 in JavaScript. We treat such tiny values as 0.
+        function clean(x) {
+            return Math.abs(x) < 1e-14 ? 0 : x;
+        }
+
+        function factorial(n) {
+            if (!Number.isInteger(n) || n < 0 || n > 170) throw mathError();
+            let result = 1;
+            for (let i = 2; i <= n; i++) result *= i;
+            return result;
+        }
+        function checkNR(n, r) {
+            if (!Number.isInteger(n) || !Number.isInteger(r) || n < 0 || r < 0 || r > n) throw mathError();
+        }
+        function permutation(n, r) {
+            checkNR(n, r);
+            let result = 1;
+            for (let i = 0; i < r; i++) result *= (n - i);
+            return result;
+        }
+        function combination(n, r) {
+            checkNR(n, r);
+            r = Math.min(r, n - r);
+            let result = 1;
+            for (let i = 1; i <= r; i++) result = result * (n - r + i) / i;
+            return Math.round(result);
+        }
+        function power(base, exp) {
+            if (base === 0 && exp === 0) throw mathError();
+            const result = Math.pow(base, exp);
+            if (Number.isNaN(result)) throw mathError();
+            return result;
+        }
+        // n-th root of value  (3 ˣ√ 8 = 2)
+        function root(n, value) {
+            if (n === 0) throw mathError();
+            if (value < 0) {
+                // odd roots of negative numbers are fine: 3 ˣ√ -8 = -2
+                if (Number.isInteger(n) && n % 2 !== 0) return -Math.pow(-value, 1 / n);
+                throw mathError();
+            }
+            return Math.pow(value, 1 / n);
+        }
+
+        // All one-argument functions
+        const FUNCTIONS = {
+            sin: x => clean(Math.sin(toRadians(x))),
+            cos: x => clean(Math.cos(toRadians(x))),
+            tan: x => {
+                if (Math.abs(Math.cos(toRadians(x))) < 1e-14) throw mathError();   // tan(90°) is undefined
+                return clean(Math.tan(toRadians(x)));
+            },
+            asin: x => { if (Math.abs(x) > 1) throw mathError(); return fromRadians(Math.asin(x)); },
+            acos: x => { if (Math.abs(x) > 1) throw mathError(); return fromRadians(Math.acos(x)); },
+            atan: x => fromRadians(Math.atan(x)),
+            sinh: x => Math.sinh(x),
+            cosh: x => Math.cosh(x),
+            tanh: x => Math.tanh(x),
+            asinh: x => Math.asinh(x),
+            acosh: x => { if (x < 1) throw mathError(); return Math.acosh(x); },
+            atanh: x => { if (Math.abs(x) >= 1) throw mathError(); return Math.atanh(x); },
+            log: x => { if (x <= 0) throw mathError(); return Math.log10(x); },
+            ln: x => { if (x <= 0) throw mathError(); return Math.log(x); },
+            abs: x => Math.abs(x),
+            sqrt: x => { if (x < 0) throw mathError(); return Math.sqrt(x); },
+            cbrt: x => Math.cbrt(x)
+        };
+
+        /* =====================================================
+           3. TOKENIZER  (text  ->  list of small pieces)
+           ===================================================== */
+        const FUNCTION_NAMES = ['asinh', 'acosh', 'atanh', 'sinh', 'cosh', 'tanh',
+            'asin', 'acos', 'atan', 'sin', 'cos', 'tan', 'log', 'ln', 'abs'];
+        const CONSTANT_NAMES = ['Ans', 'Ran#', 'pi', 'e', 'M', 'x'];
+
+        // longest first, so "asin" is matched before "sin"
+        const WORDS = [...FUNCTION_NAMES, ...CONSTANT_NAMES].sort((a, b) => b.length - a.length);
+        const LONG_WORDS = WORDS.filter(w => w.length > 1);   // used by the DEL key
+
+        function tokenize(text) {
+            const tokens = [];
+            text = text.replace(/\s+/g, '');
+            let i = 0;
+
+            while (i < text.length) {
+                const ch = text[i];
+
+                // number, like 12  3.5  .5  2E-3
+                if (/[0-9.]/.test(ch)) {
+                    let j = i;
+                    while (j < text.length && /[0-9.]/.test(text[j])) j++;
+                    if (text[j] === 'E' && /[0-9+\-−]/.test(text[j + 1] || '')) {
+                        j++;
+                        if (/[+\-−]/.test(text[j])) j++;
+                        while (j < text.length && /[0-9]/.test(text[j])) j++;
+                    }
+                    const value = Number(text.slice(i, j).replace('−', '-'));
+                    if (Number.isNaN(value)) throw syntaxError();
+                    tokens.push({ type: 'num', value });
+                    i = j;
+                    continue;
+                }
+
+                // names like sin, cos, Ans, e
+                const word = WORDS.find(w => text.startsWith(w, i));
+                if (word) {
+                    if (FUNCTION_NAMES.includes(word)) tokens.push({ type: 'fn', value: word });
+                    else tokens.push({ type: 'const', value: word === 'pi' ? 'π' : word });
+                    i += word.length;
+                    continue;
+                }
+
+                // special symbols
+                if (text.startsWith('ˣ√', i)) { tokens.push({ type: 'op', value: 'ˣ√' }); i += 2; continue; }
+                if (ch === '√') { tokens.push({ type: 'fn', value: 'sqrt' }); i++; continue; }
+                if (ch === '∛') { tokens.push({ type: 'fn', value: 'cbrt' }); i++; continue; }
+                if (ch === 'π') { tokens.push({ type: 'const', value: 'π' }); i++; continue; }
+
+                // operators (keyboard symbols are converted to the nice ones)
+                const aliases = { '*': '×', '/': '÷', '-': '−' };
+                const op = aliases[ch] || ch;
+                if ('+−×÷^()!%²³PC'.includes(op)) {
+                    tokens.push({ type: 'op', value: op });
+                    i++;
+                    continue;
+                }
+
+                throw syntaxError();   // unknown character
+            }
+            return tokens;
+        }
+
+        /* =====================================================
+           4. PARSER  (calculates the answer, respects BODMAS)
+        
+           expr    =  term   ( + | − term )*
+           term    =  perm   ( × | ÷ perm )*      (also 2π, 3(4) ...)
+           perm    =  unary  ( P | C unary )*
+           unary   =  − unary | power
+           power   =  postfix ( ^ unary | ˣ√ unary )?
+           postfix =  primary ( ! | % | ² | ³ )*
+           primary =  number | constant | ( expr ) | function primary
+           ===================================================== */
+        function evaluate(text, vars = {}) {
+            const tokens = tokenize(text);
+            let pos = 0;
+
+            const peek = () => tokens[pos];
+            const next = () => tokens[pos++];
+            const isOp = value => peek() && peek().type === 'op' && peek().value === value;
+
+            function startsOperand(tok) {
+                if (!tok) return false;
+                if (tok.type === 'num' || tok.type === 'fn' || tok.type === 'const') return true;
+                return tok.type === 'op' && tok.value === '(';
+            }
+
+            function constantValue(name) {
+                if (name === 'π') return Math.PI;
+                if (name === 'e') return Math.E;
+                if (name === 'Ans') return lastAnswer;
+                if (name === 'M') return memory;
+                if (name === 'Ran#') return Math.floor(Math.random() * 1000) / 1000;
+                if (name === 'x') {
+                    if (vars.x === undefined) throw syntaxError();
+                    return vars.x;
+                }
+                throw syntaxError();
+            }
+
+            function parseExpr() {
+                let left = parseTerm();
+                while (isOp('+') || isOp('−')) {
+                    const op = next().value;
+                    const right = parseTerm();
+                    left = (op === '+') ? left + right : left - right;
+                }
+                return left;
+            }
+
+            function parseTerm() {
+                let left = parsePerm();
+                while (true) {
+                    if (isOp('×')) {
+                        next();
+                        left = left * parsePerm();
+                    } else if (isOp('÷')) {
+                        next();
+                        const right = parsePerm();
+                        if (right === 0) throw mathError();
+                        left = left / right;
+                    } else if (startsOperand(peek())) {
+                        left = left * parsePerm();          // implicit multiplication: 2π, 3(4+1)
+                    } else {
+                        break;
+                    }
+                }
+                return left;
+            }
+
+            function parsePerm() {
+                let left = parseUnary();
+                while (isOp('P') || isOp('C')) {
+                    const op = next().value;
+                    const right = parseUnary();
+                    left = (op === 'P') ? permutation(left, right) : combination(left, right);
+                }
+                return left;
+            }
+
+            function parseUnary() {
+                if (isOp('−')) { next(); return -parseUnary(); }
+                if (isOp('+')) { next(); return parseUnary(); }
+                return parsePower();
+            }
+
+            function parsePower() {
+                const base = parsePostfix();
+                if (isOp('^')) { next(); return power(base, parseUnary()); }
+                if (isOp('ˣ√')) { next(); return root(base, parseUnary()); }
+                return base;
+            }
+
+            function parsePostfix() {
+                let value = parsePrimary();
+                while (true) {
+                    if (isOp('!')) { next(); value = factorial(value); }
+                    else if (isOp('%')) { next(); value = value / 100; }
+                    else if (isOp('²')) { next(); value = value * value; }
+                    else if (isOp('³')) { next(); value = value * value * value; }
+                    else break;
+                }
+                return value;
+            }
+
+            function parsePrimary() {
+                const tok = next();
+                if (!tok) throw syntaxError();
+
+                if (tok.type === 'num') return tok.value;
+                if (tok.type === 'const') return constantValue(tok.value);
+
+                if (tok.type === 'op' && tok.value === '(') {
+                    const value = parseExpr();
+                    if (isOp(')')) next();                 // a missing ")" at the end is allowed
+                    else if (peek()) throw syntaxError();
+                    return value;
+                }
+
+                if (tok.type === 'fn') {
+                    const arg = isOp('−') ? parseUnary() : parsePrimary();
+                    return FUNCTIONS[tok.value](arg);
+                }
+
+                throw syntaxError();
+            }
+
+            const answer = parseExpr();
+            if (pos < tokens.length) throw syntaxError();   // something was left over
+            if (!Number.isFinite(answer)) throw mathError();
+            return answer;
+        }
+
+        /* =====================================================
+           5. SHOWING NUMBERS
+           ===================================================== */
+        function formatNumber(x) {
+            if (x === 0) return '0';
+            const rounded = Number(x.toPrecision(10));        // 10 digits like a real calculator
+            const size = Math.abs(rounded);
+            if (size >= 1e10 || size < 1e-6) {
+                return rounded.toExponential().replace('e+', 'E').replace('e', 'E');
+            }
+            return String(rounded);
+        }
+
+        // 0.75 -> "3/4",  2.5 -> "2 1/2"
+        function toFraction(x) {
+            if (Number.isInteger(x)) return String(x);
+            if (Math.abs(x) >= 1e10) return null;
+            const sign = x < 0 ? '-' : '';
+            const value = Math.abs(x);
+
+            // continued fraction method
+            let hPrev = 0, h = 1, kPrev = 1, k = 0, b = value;
+            for (let i = 0; i < 30; i++) {
+                const a = Math.floor(b);
+                const hNext = a * h + hPrev;
+                const kNext = a * k + kPrev;
+                hPrev = h; h = hNext;
+                kPrev = k; k = kNext;
+                if (k > 10000) return null;                     // not a "nice" fraction
+                if (Math.abs(value - h / k) < 1e-10) break;
+                b = 1 / (b - a);
+            }
+            if (Math.abs(value - h / k) >= 1e-9) return null;
+
+            if (h > k) {
+                const whole = Math.floor(h / k);
+                const rest = h - whole * k;
+                return rest === 0 ? sign + whole : `${sign}${whole} ${rest}/${k}`;
+            }
+            return `${sign}${h}/${k}`;
+        }
+
+        function showResult() {
+            resultBox.classList.remove('error', 'preview');
+            let text = formatNumber(lastValue);
+            if (showFraction) {
+                const fraction = toFraction(lastValue);
+                if (fraction) text = fraction;
+            }
+            resultBox.textContent = text;
+        }
+
+        function showError(err) {
+            resultBox.classList.remove('preview');
+            resultBox.classList.add('error');
+            resultBox.textContent = (err instanceof CalcError) ? err.message : 'Syntax ERROR';
+        }
+
+        /* =====================================================
+           6. KEYS and BUTTONS
+           ===================================================== */
+        // Text shown on a key (when it is different from what gets typed)
+        const LABELS = {
+            'asin(': 'sin⁻¹', 'acos(': 'cos⁻¹', 'atan(': 'tan⁻¹',
+            'asinh(': 'sinh⁻¹', 'acosh(': 'cosh⁻¹', 'atanh(': 'tanh⁻¹',
+            '10^(': '10ˣ', 'e^(': 'eˣ',
+            '^': 'xʸ', 'ˣ√': 'ʸ√x', '²': 'x²', '³': 'x³', '^(-1)': 'x⁻¹', '!': 'x!',
+            'P': 'nPr', 'C': 'nCr', 'E': 'EXP', 'abs(': 'Abs'
+        };
+        function labelFor(text) {
+            if (LABELS[text]) return LABELS[text];
+            if (text.length > 1 && text.endsWith('(')) return text.slice(0, -1);   // "sin(" -> "sin"
+            return text;
+        }
+
+        // Which text should this key type right now? (depends on INV / HYP)
+        function pickText(btn) {
+            const d = btn.dataset;
+            if (hypOn && invOn && d.invhyp) return d.invhyp;
+            if (hypOn && d.hyp) return d.hyp;
+            if (invOn && d.inv) return d.inv;
+            return d.v;
+        }
+
+        function refreshKeys() {
+            document.querySelectorAll('#keys button[data-v]').forEach(btn => {
+                btn.textContent = labelFor(pickText(btn));
+            });
+            $('invBtn').classList.toggle('on', invOn);
+            $('hypBtn').classList.toggle('on', hypOn);
+            $('modeBtn').textContent = angleMode;
+
+            $('stDeg').textContent = angleMode;
+            $('stDeg').classList.add('on');
+            $('stInv').classList.toggle('on', invOn);
+            $('stHyp').classList.toggle('on', hypOn);
+            $('stMem').classList.toggle('on', memory !== 0);
+        }
+
+        // After "=", an operator continues from Ans, a number starts a new calculation
+        const CONTINUE_WITH_ANS = ['+', '−', '-', '×', '*', '÷', '/', '^', '²', '³', '!', '%', 'P', 'C', 'ˣ√', '^(-1)'];
+
+        // grey live answer under the screen while you type
+        function updatePreview() {
+            if (afterResult) return;
+            const text = input.value.trim();
+            if (text === '') {
+                resultBox.classList.remove('error', 'preview');
+                resultBox.textContent = '0';
+                return;
+            }
+            try {
+                const value = evaluate(text);
+                resultBox.classList.remove('error');
+                resultBox.classList.add('preview');
+                resultBox.textContent = formatNumber(value);
+            } catch (err) {
+                resultBox.classList.remove('error', 'preview');
+                resultBox.textContent = '';              // expression is not finished yet
+            }
+        }
+        input.addEventListener('input', updatePreview);
+
+        function insertText(text) {
+            if (afterResult) {
+                input.value = CONTINUE_WITH_ANS.includes(text) ? 'Ans' : '';
+                input.setSelectionRange(input.value.length, input.value.length);
+                afterResult = false;
+            }
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            input.value = input.value.slice(0, start) + text + input.value.slice(end);
+            const cursor = start + text.length;
+            input.setSelectionRange(cursor, cursor);
+            input.focus();
+            updatePreview();
+        }
+
+        function deleteBack() {
+            afterResult = false;
+            let start = input.selectionStart;
+            const end = input.selectionEnd;
+
+            if (start === end) {
+                if (start === 0) return;
+                const before = input.value.slice(0, start);
+                let remove = 1;
+                // delete a whole function name like "sin(" in one press
+                for (const word of LONG_WORDS) {
+                    if (before.endsWith(word + '(')) { remove = word.length + 1; break; }
+                    if (before.endsWith(word)) { remove = word.length; break; }
+                }
+                start -= remove;
+            }
+            input.value = input.value.slice(0, start) + input.value.slice(end);
+            input.setSelectionRange(start, start);
+            updatePreview();
+        }
+
+        function clearAll() {
+            input.value = '';
+            resultBox.classList.remove('error', 'preview');
+            resultBox.textContent = '0';
+            afterResult = false;
+            showFraction = false;
+            input.focus();
+        }
+
+        function calculate() {
+            const text = input.value.trim();
+            if (text === '') return;
+            try {
+                const value = evaluate(text);
+                lastAnswer = value;
+                lastValue = value;
+                showFraction = false;
+                showResult();
+                addToHistory(text, value);
+                afterResult = true;
+            } catch (err) {
+                showError(err);
+            }
+        }
+
+        // value used by M+ and M-  (current expression, or the last result)
+        function valueForMemory() {
+            const text = input.value.trim();
+            try {
+                return text === '' ? lastValue : evaluate(text);
+            } catch (err) {
+                showError(err);
+                return null;
+            }
+        }
+
+        function doAction(action) {
+            if (action === 'inv') { invOn = !invOn; }
+            else if (action === 'hyp') { hypOn = !hypOn; }
+            else if (action === 'mode') {
+                const modes = ['DEG', 'RAD', 'GRAD'];
+                angleMode = modes[(modes.indexOf(angleMode) + 1) % modes.length];
+            }
+            else if (action === 'frac') {
+                if (lastValue !== null) { showFraction = !showFraction; showResult(); }
+            }
+            else if (action === 'mc') { memory = 0; }
+            else if (action === 'mr') { insertText('M'); }
+            else if (action === 'mplus') { const v = valueForMemory(); if (v !== null) memory += v; }
+            else if (action === 'mminus') { const v = valueForMemory(); if (v !== null) memory -= v; }
+            else if (action === 'del') { deleteBack(); }
+            else if (action === 'ac') { clearAll(); }
+            else if (action === 'eq') { calculate(); }
+            refreshKeys();
+        }
+
+        $('keys').addEventListener('click', e => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            if (btn.dataset.act) {
+                doAction(btn.dataset.act);
+            } else if (btn.dataset.v) {
+                insertText(pickText(btn));
+                invOn = false;          // INV and HYP work for one key press only
+                hypOn = false;
+                refreshKeys();
+            }
+            input.focus();
+        });
+
+        // physical keyboard
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); calculate(); return; }
+            if (e.key === 'Escape') { clearAll(); return; }
+            if (e.key === 'Backspace' || e.key === 'Delete') { afterResult = false; return; }
+
+            if (afterResult && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                input.value = CONTINUE_WITH_ANS.includes(e.key) ? 'Ans' : '';
+                input.setSelectionRange(input.value.length, input.value.length);
+                afterResult = false;
+            }
+        });
+
+        $('copyBtn').addEventListener('click', () => {
+            if (lastValue === null || !navigator.clipboard) return;
+            navigator.clipboard.writeText(resultBox.textContent).catch(() => { });
+            $('copyBtn').textContent = 'Copied';
+            setTimeout(() => { $('copyBtn').textContent = 'Copy'; }, 1000);
+        });
+
+        /* =====================================================
+           7. HISTORY
+           ===================================================== */
+        function addToHistory(expr, value) {
+            history.unshift({ expr, value });
+            if (history.length > 50) history.pop();
+            try { localStorage.setItem('calcHistory', JSON.stringify(history)); } catch (e) { }
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = $('historyList');
+            list.innerHTML = '';
+            if (history.length === 0) {
+                list.innerHTML = '<li class="empty-state"><span class="big-icon">🧮</span>No calculations yet.<br>Press = on the calculator and it will appear here.</li>';
+                return;
+            }
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'h-item';
+                li.title = 'Tap to bring this expression back';
+
+                const text = document.createElement('div');
+                text.className = 'h-text';
+                const exprLine = document.createElement('div');
+                exprLine.className = 'h-expr';
+                exprLine.textContent = item.expr;
+                const valueLine = document.createElement('div');
+                valueLine.className = 'h-val';
+                valueLine.textContent = '= ' + formatNumber(item.value);
+                text.append(exprLine, valueLine);
+
+                const useBtn = document.createElement('button');
+                useBtn.type = 'button';
+                useBtn.className = 'ghost';
+                useBtn.textContent = 'Use answer';
+                useBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    useInCalculator(formatNumber(item.value));
+                });
+
+                li.append(text, useBtn);
+                li.addEventListener('click', () => {
+                    input.value = item.expr;
+                    afterResult = false;
+                    input.focus();
+                    updatePreview();
+                    if (window.innerWidth <= 900) input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                });
+                list.appendChild(li);
+            });
+        }
+
+        $('clearHistory').addEventListener('click', () => {
+            history = [];
+            try { localStorage.removeItem('calcHistory'); } catch (e) { }
+            renderHistory();
+        });
+
+        /* =====================================================
+           8. SMALL HELPERS, TABS and THEME
+           ===================================================== */
+        // Small message at the bottom of the screen
+        function toast(text) {
+            const box = $('toast');
+            box.textContent = text;
+            box.classList.add('show');
+            clearTimeout(toast.timer);
+            toast.timer = setTimeout(() => box.classList.remove('show'), 1700);
+        }
+
+        function copyText(text) {
+            const done = () => toast('Copied: ' + text);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done, () => toast('Could not copy'));
+            } else {
+                toast('Copy is not supported here');
+            }
+        }
+
+        // Put a number from any tab into the calculator screen.
+        // Brackets keep it safe:  2 + (−3)  and  2(6.02E23)
+        function useInCalculator(text, label) {
+            insertText('(' + text + ')');
+            updatePreview();
+            toast('Inserted ' + (label || text));
+            if (window.innerWidth <= 900) {                      // phone: show the screen again
+                $('expr').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Builds result boxes.  item = { k: label, v: value text, raw: text to insert/copy, mode: 'insert' | 'copy' | none, good: true }
+        function renderTiles(box, items) {
+            box.innerHTML = '';
+            box.classList.add('tiles');
+            items.forEach(item => {
+                const mode = item.mode;
+                const tile = document.createElement(mode ? 'button' : 'div');
+                tile.className = 'tile' + (item.good ? ' good' : '');
+                if (mode) tile.type = 'button';
+
+                const k = document.createElement('span');
+                k.className = 'k';
+                k.textContent = item.k;
+                const v = document.createElement('span');
+                v.className = 'v';
+                v.textContent = item.v;
+                tile.append(k, v);
+
+                if (mode) {
+                    const a = document.createElement('span');
+                    a.className = 'a';
+                    a.textContent = (mode === 'insert') ? 'Tap to use' : 'Tap to copy';
+                    tile.appendChild(a);
+                    tile.addEventListener('click', () => {
+                        const raw = item.raw !== undefined ? item.raw : item.v;
+                        if (mode === 'insert') useInCalculator(raw, item.k + ' = ' + raw);
+                        else copyText(raw);
+                    });
+                }
+                box.appendChild(tile);
+            });
+        }
+
+        function showMessage(box, text, isError) {
+            box.innerHTML = '';
+            box.classList.remove('tiles');
+            const p = document.createElement('div');
+            p.className = 'msg' + (isError ? ' err' : '');
+            p.textContent = text;
+            box.appendChild(p);
+        }
+
+        document.querySelectorAll('.tabs button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                $('tab-' + btn.dataset.tab).classList.add('active');
+                btn.scrollIntoView({ block: 'nearest', inline: 'center' });
+                if (btn.dataset.tab === 'graph') drawGraph();
+            });
+        });
+
+        function isGraphOpen() {
+            return $('tab-graph').classList.contains('active');
+        }
+
+        $('themeBtn').addEventListener('click', () => {
+            document.body.classList.toggle('light');
+            const light = document.body.classList.contains('light');
+            try { localStorage.setItem('calcTheme', light ? 'light' : 'dark'); } catch (e) { }
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', light ? '#f1f3f4' : '#202124');
+            if (isGraphOpen()) drawGraph();
+        });
+
+        /* =====================================================
+           9. GRAPH
+           ===================================================== */
+        const GRAPH_DEFAULT = { xMin: -10, xMax: 10, yMin: -5, yMax: 5 };
+        let graphView = { ...GRAPH_DEFAULT };          // the range that is on the screen now
+        const GRAPH_COLORS = ['#8ab4f8', '#fcad70'];   // f1 = blue, f2 = orange
+
+        function cssVar(name) {
+            return getComputedStyle(document.body).getPropertyValue(name).trim();
+        }
+
+        // picks a clean grid spacing like 1, 2, 5, 10, 20 ...
+        function niceStep(range) {
+            const raw = range / 8;
+            const p = Math.pow(10, Math.floor(Math.log10(raw)));
+            const n = raw / p;
+            return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * p;
+        }
+
+        // y value of a function at one x (NaN when it does not exist there)
+        function graphValue(text, x) {
+            const savedMode = angleMode;
+            angleMode = 'RAD';
+            try {
+                return evaluate(text, { x });
+            } catch (err) {
+                return NaN;
+            } finally {
+                angleMode = savedMode;
+            }
+        }
+
+        function readGraphRange() {
+            const v = {
+                xMin: parseFloat($('gxmin').value),
+                xMax: parseFloat($('gxmax').value),
+                yMin: parseFloat($('gymin').value),
+                yMax: parseFloat($('gymax').value)
+            };
+            const bad = Object.values(v).some(Number.isNaN) || v.xMin >= v.xMax || v.yMin >= v.yMax;
+            return bad ? null : v;
+        }
+
+        function writeGraphRange(v) {
+            const f = n => String(Number(n.toPrecision(6)));
+            $('gxmin').value = f(v.xMin);
+            $('gxmax').value = f(v.xMax);
+            $('gymin').value = f(v.yMin);
+            $('gymax').value = f(v.yMax);
+        }
+
+        function drawGraph() {
+            const canvas = $('graph');
+            const cssWidth = canvas.clientWidth;
+            if (!cssWidth) return;                         // tab is hidden
+
+            const dpr = window.devicePixelRatio || 1;      // sharp lines on phones
+            canvas.width = Math.round(cssWidth * dpr);
+            canvas.height = Math.round(cssWidth * 0.7 * dpr);
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            const msg = $('graphMsg');
+            msg.textContent = '';
+
+            const colorBg = cssVar('--graph-bg');
+            const colorGrid = cssVar('--graph-grid');
+            const colorAxis = cssVar('--muted');
+            ctx.fillStyle = colorBg;
+            ctx.fillRect(0, 0, W, H);
+
+            const range = readGraphRange();
+            if (!range) {
+                msg.textContent = 'Please check the x and y range: min must be smaller than max.';
+                return;
+            }
+            graphView = range;
+            const { xMin, xMax, yMin, yMax } = range;
+
+            // math coordinates  ->  canvas pixels
+            const toX = x => (x - xMin) / (xMax - xMin) * W;
+            const toY = y => H - (y - yMin) / (yMax - yMin) * H;
+
+            // grid and numbers
+            const stepX = niceStep(xMax - xMin);
+            const stepY = niceStep(yMax - yMin);
+            ctx.font = (11 * dpr) + 'px Arial';
+            ctx.lineWidth = 1;
+            const axisY = Math.min(Math.max(toY(0), 0), H);
+            const axisX = Math.min(Math.max(toX(0), 0), W);
+
+            for (let k = Math.ceil(xMin / stepX); k * stepX <= xMax; k++) {
+                const px = toX(k * stepX);
+                ctx.strokeStyle = colorGrid;
+                ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke();
+                if (k !== 0) {
+                    ctx.fillStyle = colorAxis;
+                    ctx.fillText(String(Number((k * stepX).toFixed(6))), px + 3 * dpr, Math.min(Math.max(axisY + 13 * dpr, 13 * dpr), H - 4 * dpr));
+                }
+            }
+            for (let k = Math.ceil(yMin / stepY); k * stepY <= yMax; k++) {
+                const py = toY(k * stepY);
+                ctx.strokeStyle = colorGrid;
+                ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.stroke();
+                if (k !== 0) {
+                    ctx.fillStyle = colorAxis;
+                    ctx.fillText(String(Number((k * stepY).toFixed(6))), Math.min(Math.max(axisX + 4 * dpr, 4 * dpr), W - 34 * dpr), py - 3 * dpr);
+                }
+            }
+
+            // x and y axes
+            ctx.strokeStyle = colorAxis;
+            ctx.lineWidth = 1.5 * dpr;
+            if (xMin <= 0 && xMax >= 0) { ctx.beginPath(); ctx.moveTo(toX(0), 0); ctx.lineTo(toX(0), H); ctx.stroke(); }
+            if (yMin <= 0 && yMax >= 0) { ctx.beginPath(); ctx.moveTo(0, toY(0)); ctx.lineTo(W, toY(0)); ctx.stroke(); }
+
+            // the curves: calculate y for every pixel column
+            const functions = [$('gFunc').value.trim(), $('gFunc2').value.trim()];
+            const unplottable = [];
+            functions.forEach((text, index) => {
+                if (text === '') return;
+                ctx.strokeStyle = GRAPH_COLORS[index];
+                ctx.lineWidth = 2.2 * dpr;
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                let penDown = false;
+                let prevPy = 0;
+                let validPoints = 0;
+                for (let px = 0; px <= W; px++) {
+                    const x = xMin + (xMax - xMin) * px / W;
+                    const y = graphValue(text, x);
+                    if (!Number.isFinite(y)) { penDown = false; continue; }
+                    const py = toY(y);
+                    if (penDown && Math.abs(py - prevPy) > H) penDown = false;   // don't join across tan(x) jumps
+                    if (penDown) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+                    penDown = true;
+                    prevPy = py;
+                    validPoints++;
+                }
+                ctx.stroke();
+                if (validPoints === 0) unplottable.push('f' + (index + 1));
+            });
+
+            if (unplottable.length) {
+                msg.textContent = 'Could not plot ' + unplottable.join(' and ') + '. Use x as the variable, for example x^2 − 4.';
+            }
+        }
+
+        // reading x and y when the mouse / finger moves over the graph
+        function showGraphReading(event) {
+            const canvas = $('graph');
+            const rect = canvas.getBoundingClientRect();
+            const x = graphView.xMin + (graphView.xMax - graphView.xMin) * (event.clientX - rect.left) / rect.width;
+            const parts = ['x = ' + formatNumber(x)];
+            [$('gFunc').value.trim(), $('gFunc2').value.trim()].forEach((text, index) => {
+                if (text === '') return;
+                const y = graphValue(text, x);
+                parts.push(`<span class="dot" style="background:${GRAPH_COLORS[index]}"></span>f${index + 1} = ${Number.isFinite(y) ? formatNumber(y) : 'undefined'}`);
+            });
+            $('graphRead').innerHTML = parts.join(' &nbsp; ');
+        }
+        $('graph').addEventListener('pointermove', showGraphReading);
+        $('graph').addEventListener('pointerleave', () => { $('graphRead').textContent = ''; });
+
+        function zoomGraph(factor) {
+            const r = readGraphRange();
+            if (!r) { drawGraph(); return; }
+            const cx = (r.xMin + r.xMax) / 2, cy = (r.yMin + r.yMax) / 2;
+            const hx = (r.xMax - r.xMin) / 2 * factor, hy = (r.yMax - r.yMin) / 2 * factor;
+            writeGraphRange({ xMin: cx - hx, xMax: cx + hx, yMin: cy - hy, yMax: cy + hy });
+            drawGraph();
+        }
+
+        $('plotBtn').addEventListener('click', drawGraph);
+        $('zoomIn').addEventListener('click', () => zoomGraph(0.5));
+        $('zoomOut').addEventListener('click', () => zoomGraph(2));
+        $('zoomReset').addEventListener('click', () => { writeGraphRange(GRAPH_DEFAULT); drawGraph(); });
+        ['gFunc', 'gFunc2', 'gxmin', 'gxmax', 'gymin', 'gymax'].forEach(id => {
+            $(id).addEventListener('keydown', e => { if (e.key === 'Enter') drawGraph(); });
+        });
+        $('graphChips').addEventListener('click', e => {
+            const chip = e.target.closest('.chip');
+            if (!chip) return;
+            $('gFunc').value = chip.dataset.f;
+            $('gFunc2').value = '';
+            drawGraph();
+        });
+        window.addEventListener('resize', () => { if (isGraphOpen()) drawGraph(); });
+
+        /* =====================================================
+           10. EQUATIONS
+           ===================================================== */
+        const num = id => parseFloat($(id).value);
+
+        $('solveQuad').addEventListener('click', () => {
+            const a = num('qa'), b = num('qb'), c = num('qc');
+            const out = $('quadOut');
+            if ([a, b, c].some(Number.isNaN)) { showMessage(out, 'Please enter a, b and c.', true); return; }
+
+            if (a === 0) {                                   // not really quadratic
+                if (b === 0) { showMessage(out, c === 0 ? 'Every x is a solution.' : 'No solution.', true); return; }
+                const x = formatNumber(-c / b);
+                renderTiles(out, [{ k: 'a = 0, so it is linear: x', v: x, mode: 'insert' }]);
+                return;
+            }
+
+            const d = b * b - 4 * a * c;                     // discriminant
+            const items = [{ k: 'Discriminant D', v: formatNumber(d), mode: 'insert' }];
+            if (d > 0) {
+                items.push({ k: 'x₁', v: formatNumber((-b + Math.sqrt(d)) / (2 * a)), mode: 'insert', good: true });
+                items.push({ k: 'x₂', v: formatNumber((-b - Math.sqrt(d)) / (2 * a)), mode: 'insert', good: true });
+            } else if (d === 0) {
+                items.push({ k: 'x (repeated root)', v: formatNumber(-b / (2 * a)), mode: 'insert', good: true });
+            } else {
+                const re = formatNumber(-b / (2 * a));
+                const im = formatNumber(Math.sqrt(-d) / (2 * Math.abs(a)));
+                items.push({ k: 'x₁ (complex)', v: `${re} + ${im}i`, good: true });
+                items.push({ k: 'x₂ (complex)', v: `${re} − ${im}i`, good: true });
+            }
+            renderTiles(out, items);
+        });
+        $('quadEx').addEventListener('click', () => {
+            $('qa').value = 1; $('qb').value = -5; $('qc').value = 6;
+            $('solveQuad').click();
+        });
+
+        // Linear systems (2x2 and 3x3) with Gaussian elimination
+        function solveLinearSystem(matrix) {
+            const n = matrix.length;
+            const a = matrix.map(row => row.slice());
+            for (let col = 0; col < n; col++) {
+                let best = col;
+                for (let r = col + 1; r < n; r++) if (Math.abs(a[r][col]) > Math.abs(a[best][col])) best = r;
+                if (Math.abs(a[best][col]) < 1e-12) return null;          // no single answer
+                [a[col], a[best]] = [a[best], a[col]];
+                for (let r = col + 1; r < n; r++) {
+                    const factor = a[r][col] / a[col][col];
+                    for (let k = col; k <= n; k++) a[r][k] -= factor * a[col][k];
+                }
+            }
+            const x = new Array(n);
+            for (let r = n - 1; r >= 0; r--) {
+                let sum = a[r][n];
+                for (let k = r + 1; k < n; k++) sum -= a[r][k] * x[k];
+                x[r] = sum / a[r][r];
+            }
+            return x;
+        }
+
+        // builds the input boxes:  [ ] x + [ ] y = [ ]
+        function buildEquationRows(boxId, size) {
+            const names = ['x', 'y', 'z'];
+            const box = $(boxId);
+            for (let r = 0; r < size; r++) {
+                const row = document.createElement('div');
+                row.className = 'eqrow';
+                for (let c = 0; c <= size; c++) {
+                    if (c > 0) row.append(c < size ? ' ' + names[c - 1] + ' +' : ' ' + names[c - 1] + ' =');
+                    const field = document.createElement('input');
+                    field.className = 'f';
+                    field.type = 'number';
+                    field.step = 'any';
+                    field.inputMode = 'decimal';
+                    field.placeholder = c < size ? 'abc'[c] : 'd';
+                    field.setAttribute('aria-label', `row ${r + 1}, ${c < size ? 'coefficient of ' + names[c] : 'right side'}`);
+                    row.append(field);
+                }
+                box.appendChild(row);
+            }
+        }
+        buildEquationRows('lin2Rows', 2);
+        buildEquationRows('lin3Rows', 3);
+
+        function wireLinearSolver(size, rowsId, outId, solveId, exampleId, example) {
+            const names = ['x', 'y', 'z'];
+            const fields = () => [...$(rowsId).querySelectorAll('input')];
+
+            $(solveId).addEventListener('click', () => {
+                const out = $(outId);
+                const values = fields().map(f => parseFloat(f.value));
+                if (values.some(Number.isNaN)) { showMessage(out, 'Please fill every box.', true); return; }
+                const matrix = [];
+                for (let r = 0; r < size; r++) matrix.push(values.slice(r * (size + 1), (r + 1) * (size + 1)));
+                const answer = solveLinearSystem(matrix);
+                if (!answer) { showMessage(out, 'No single answer: the equations are parallel, the same, or depend on each other.', true); return; }
+                renderTiles(out, answer.map((v, i) => ({ k: names[i], v: formatNumber(clean(v)), mode: 'insert', good: true })));
+            });
+
+            $(exampleId).addEventListener('click', () => {
+                fields().forEach((f, i) => { f.value = example[i]; });
+                $(solveId).click();
+            });
+        }
+        wireLinearSolver(2, 'lin2Rows', 'lin2Out', 'solveLin2', 'lin2Ex', [2, 1, 5, 1, -1, 1]);                       // x=2, y=1
+        wireLinearSolver(3, 'lin3Rows', 'lin3Out', 'solveLin3', 'lin3Ex', [1, 1, 1, 6, 0, 2, 5, 19, 2, -1, 1, 3]);    // x=1, y=2, z=3
+
+        /* =====================================================
+           11. STATISTICS
+           ===================================================== */
+        function medianOf(sorted) {
+            const n = sorted.length;
+            if (n === 0) return NaN;
+            return (n % 2 === 1) ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+        }
+
+        $('statBtn').addEventListener('click', () => {
+            const out = $('statOut');
+            const data = $('statData').value.split(/[\s,;]+/).filter(p => p !== '').map(Number);
+            if (data.length === 0 || data.some(Number.isNaN)) {
+                showMessage(out, 'Please enter numbers separated by commas or spaces.', true);
+                return;
+            }
+
+            const n = data.length;
+            const sum = data.reduce((s, v) => s + v, 0);
+            const mean = sum / n;
+            const sumSquares = data.reduce((s, v) => s + v * v, 0);
+            const sorted = [...data].sort((p, q) => p - q);
+            const median = medianOf(sorted);
+            const lowerHalf = sorted.slice(0, Math.floor(n / 2));
+            const upperHalf = sorted.slice(Math.ceil(n / 2));
+
+            const counts = {};
+            data.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+            const highest = Math.max(...Object.values(counts));
+            const modes = (highest === 1) ? [] : Object.keys(counts).filter(k => counts[k] === highest).map(Number);
+
+            const spread = data.reduce((s, v) => s + (v - mean) ** 2, 0);
+            const f = formatNumber;
+            const items = [
+                { k: 'Count (n)', v: String(n), mode: 'insert' },
+                { k: 'Sum (Σx)', v: f(sum), mode: 'insert' },
+                { k: 'Mean (x̄)', v: f(mean), mode: 'insert', good: true },
+                { k: 'Median', v: f(median), mode: 'insert', good: true },
+                { k: 'Mode', v: modes.length ? modes.map(f).join(', ') : 'none', mode: modes.length === 1 ? 'insert' : undefined, raw: modes.length === 1 ? f(modes[0]) : undefined, good: true },
+                { k: 'Minimum', v: f(sorted[0]), mode: 'insert' },
+                { k: 'Maximum', v: f(sorted[n - 1]), mode: 'insert' },
+                { k: 'Range', v: f(sorted[n - 1] - sorted[0]), mode: 'insert' },
+                { k: 'Sum of squares (Σx²)', v: f(sumSquares), mode: 'insert' }
+            ];
+            if (n > 1) {
+                items.push({ k: 'Q1 (lower quartile)', v: f(medianOf(lowerHalf)), mode: 'insert' });
+                items.push({ k: 'Q3 (upper quartile)', v: f(medianOf(upperHalf)), mode: 'insert' });
+            }
+            items.push({ k: 'Population variance (σ²)', v: f(spread / n), mode: 'insert' });
+            items.push({ k: 'Population std. dev. (σn)', v: f(Math.sqrt(spread / n)), mode: 'insert', good: true });
+            if (n > 1) {
+                items.push({ k: 'Sample variance (s²)', v: f(spread / (n - 1)), mode: 'insert' });
+                items.push({ k: 'Sample std. dev. (σn−1)', v: f(Math.sqrt(spread / (n - 1))), mode: 'insert', good: true });
+            }
+            renderTiles(out, items);
+        });
+        $('statEx').addEventListener('click', () => {
+            $('statData').value = '4, 8, 15, 16, 23, 42, 15';
+            $('statBtn').click();
+        });
+
+        /* =====================================================
+           12. NUMBER BASE
+           ===================================================== */
+        function updateBase() {
+            const text = $('baseValue').value.trim().toUpperCase();
+            const base = Number($('baseFrom').value);
+            const out = $('baseOut');
+            if (text === '') { out.innerHTML = ''; return; }
+
+            const allowed = { 2: /^-?[01]+$/, 8: /^-?[0-7]+$/, 10: /^-?[0-9]+$/, 16: /^-?[0-9A-F]+$/ }[base];
+            if (!allowed.test(text)) {
+                const digits = { 2: '0 and 1', 8: '0 to 7', 10: '0 to 9', 16: '0 to 9 and A to F' }[base];
+                showMessage(out, 'This is not a valid number in that base. Allowed digits: ' + digits + '.', true);
+                return;
+            }
+            const n = parseInt(text, base);
+            if (!Number.isSafeInteger(n)) { showMessage(out, 'This number is too large.', true); return; }
+
+            // binary is easier to read in groups of 4
+            const binary = n.toString(2);
+            const grouped = (n < 0 ? '-' : '') + Math.abs(n).toString(2).replace(/\B(?=(\d{4})+(?!\d))/g, ' ');
+            renderTiles(out, [
+                { k: 'Binary (2)', v: grouped, raw: binary, mode: 'copy' },
+                { k: 'Octal (8)', v: n.toString(8), mode: 'copy' },
+                { k: 'Decimal (10)', v: n.toString(10), mode: 'copy', good: true },
+                { k: 'Hexadecimal (16)', v: n.toString(16).toUpperCase(), mode: 'copy' }
+            ]);
+        }
+        $('baseValue').addEventListener('input', updateBase);
+        $('baseFrom').addEventListener('change', updateBase);
+
+        /* =====================================================
+           13. UNIT CONVERTER
+           Every unit has a "factor" = how many base units it equals.
+           Temperature cannot use a factor, so it has to() and from().
+           ===================================================== */
+        const UNIT_GROUPS = {
+            'Length': [
+                { n: 'Metre (m)', f: 1 }, { n: 'Kilometre (km)', f: 1000 }, { n: 'Centimetre (cm)', f: 0.01 },
+                { n: 'Millimetre (mm)', f: 0.001 }, { n: 'Micrometre (µm)', f: 1e-6 }, { n: 'Nanometre (nm)', f: 1e-9 },
+                { n: 'Angstrom (Å)', f: 1e-10 }, { n: 'Inch (in)', f: 0.0254 }, { n: 'Foot (ft)', f: 0.3048 },
+                { n: 'Yard (yd)', f: 0.9144 }, { n: 'Mile (mi)', f: 1609.344 }, { n: 'Nautical mile', f: 1852 },
+                { n: 'Astronomical unit (AU)', f: 1.495978707e11 }, { n: 'Light-year (ly)', f: 9.4607304725808e15 }
+            ],
+            'Mass': [
+                { n: 'Kilogram (kg)', f: 1 }, { n: 'Gram (g)', f: 0.001 }, { n: 'Milligram (mg)', f: 1e-6 },
+                { n: 'Microgram (µg)', f: 1e-9 }, { n: 'Quintal (q)', f: 100 }, { n: 'Tonne (t)', f: 1000 },
+                { n: 'Pound (lb)', f: 0.45359237 }, { n: 'Ounce (oz)', f: 0.028349523125 },
+                { n: 'Atomic mass unit (u)', f: 1.66053906660e-27 }
+            ],
+            'Time': [
+                { n: 'Second (s)', f: 1 }, { n: 'Millisecond (ms)', f: 1e-3 }, { n: 'Microsecond (µs)', f: 1e-6 },
+                { n: 'Nanosecond (ns)', f: 1e-9 }, { n: 'Minute (min)', f: 60 }, { n: 'Hour (h)', f: 3600 },
+                { n: 'Day', f: 86400 }, { n: 'Week', f: 604800 }, { n: 'Year (365.25 days)', f: 31557600 }
+            ],
+            'Temperature': [
+                { n: 'Celsius (°C)', to: v => v + 273.15, from: b => b - 273.15 },
+                { n: 'Fahrenheit (°F)', to: v => (v - 32) * 5 / 9 + 273.15, from: b => (b - 273.15) * 9 / 5 + 32 },
+                { n: 'Kelvin (K)', f: 1 },
+                { n: 'Rankine (°R)', f: 5 / 9 }
+            ],
+            'Area': [
+                { n: 'Square metre (m²)', f: 1 }, { n: 'Square kilometre (km²)', f: 1e6 }, { n: 'Square centimetre (cm²)', f: 1e-4 },
+                { n: 'Square millimetre (mm²)', f: 1e-6 }, { n: 'Hectare (ha)', f: 1e4 }, { n: 'Acre', f: 4046.8564224 },
+                { n: 'Square foot (ft²)', f: 0.09290304 }, { n: 'Square inch (in²)', f: 0.00064516 },
+                { n: 'Square mile (mi²)', f: 2589988.110336 }
+            ],
+            'Volume': [
+                { n: 'Cubic metre (m³)', f: 1 }, { n: 'Litre (L)', f: 1e-3 }, { n: 'Millilitre (mL)', f: 1e-6 },
+                { n: 'Cubic centimetre (cm³)', f: 1e-6 }, { n: 'Cubic foot (ft³)', f: 0.028316846592 },
+                { n: 'Cubic inch (in³)', f: 1.6387064e-5 }, { n: 'US gallon', f: 0.003785411784 },
+                { n: 'US cup', f: 0.0002365882365 }, { n: 'US fluid ounce', f: 2.95735295625e-5 }
+            ],
+            'Speed': [
+                { n: 'Metre / second (m/s)', f: 1 }, { n: 'Kilometre / hour (km/h)', f: 1 / 3.6 },
+                { n: 'Mile / hour (mph)', f: 0.44704 }, { n: 'Foot / second (ft/s)', f: 0.3048 },
+                { n: 'Knot (kn)', f: 1852 / 3600 }, { n: 'Mach (at 343 m/s)', f: 343 },
+                { n: 'Speed of light (c)', f: 299792458 }
+            ],
+            'Pressure': [
+                { n: 'Pascal (Pa)', f: 1 }, { n: 'Kilopascal (kPa)', f: 1e3 }, { n: 'Megapascal (MPa)', f: 1e6 },
+                { n: 'Bar', f: 1e5 }, { n: 'Atmosphere (atm)', f: 101325 }, { n: 'Torr', f: 101325 / 760 },
+                { n: 'mm of mercury (mmHg)', f: 133.322387415 }, { n: 'PSI (lbf/in²)', f: 6894.757293168 }
+            ],
+            'Energy': [
+                { n: 'Joule (J)', f: 1 }, { n: 'Kilojoule (kJ)', f: 1e3 }, { n: 'Calorie (cal)', f: 4.184 },
+                { n: 'Kilocalorie (kcal)', f: 4184 }, { n: 'Watt-hour (Wh)', f: 3600 }, { n: 'Kilowatt-hour (kWh)', f: 3.6e6 },
+                { n: 'Electron-volt (eV)', f: 1.602176634e-19 }, { n: 'BTU', f: 1055.05585262 }, { n: 'Erg', f: 1e-7 }
+            ],
+            'Power': [
+                { n: 'Watt (W)', f: 1 }, { n: 'Milliwatt (mW)', f: 1e-3 }, { n: 'Kilowatt (kW)', f: 1e3 },
+                { n: 'Megawatt (MW)', f: 1e6 }, { n: 'Horsepower (hp)', f: 745.69987158227 },
+                { n: 'Metric horsepower (PS)', f: 735.49875 }, { n: 'BTU / hour', f: 0.29307107017 }
+            ],
+            'Force': [
+                { n: 'Newton (N)', f: 1 }, { n: 'Kilonewton (kN)', f: 1e3 }, { n: 'Dyne', f: 1e-5 },
+                { n: 'Kilogram-force (kgf)', f: 9.80665 }, { n: 'Pound-force (lbf)', f: 4.4482216152605 }
+            ],
+            'Angle': [
+                { n: 'Degree (°)', f: 1 }, { n: 'Radian (rad)', f: 180 / Math.PI }, { n: 'Gradian (grad)', f: 0.9 },
+                { n: 'Arc minute (′)', f: 1 / 60 }, { n: 'Arc second (″)', f: 1 / 3600 }, { n: 'Revolution', f: 360 }
+            ],
+            'Frequency': [
+                { n: 'Hertz (Hz)', f: 1 }, { n: 'Kilohertz (kHz)', f: 1e3 }, { n: 'Megahertz (MHz)', f: 1e6 },
+                { n: 'Gigahertz (GHz)', f: 1e9 }, { n: 'RPM (rev / min)', f: 1 / 60 }, { n: 'Radian / second', f: 1 / (2 * Math.PI) }
+            ],
+            'Data': [
+                { n: 'Bit', f: 0.125 }, { n: 'Byte (B)', f: 1 }, { n: 'Kilobyte (KB, 1000)', f: 1e3 },
+                { n: 'Megabyte (MB, 1000²)', f: 1e6 }, { n: 'Gigabyte (GB, 1000³)', f: 1e9 }, { n: 'Terabyte (TB, 1000⁴)', f: 1e12 },
+                { n: 'Kibibyte (KiB, 1024)', f: 1024 }, { n: 'Mebibyte (MiB, 1024²)', f: 1048576 },
+                { n: 'Gibibyte (GiB, 1024³)', f: 1073741824 }, { n: 'Tebibyte (TiB, 1024⁴)', f: 1099511627776 }
+            ]
+        };
+
+        function toBase(unit, value) { return unit.to ? unit.to(value) : value * unit.f; }
+        function fromBase(unit, base) { return unit.from ? unit.from(base) : base / unit.f; }
+        function convertUnit(value, fromUnit, toUnit) { return fromBase(toUnit, toBase(fromUnit, value)); }
+
+        function fillSelect(select, labels, selected) {
+            select.innerHTML = '';
+            labels.forEach((label, i) => {
+                const option = document.createElement('option');
+                option.value = String(i);
+                option.textContent = label;
+                select.appendChild(option);
+            });
+            select.value = String(selected);
+        }
+
+        function unitsOfType() {
+            return UNIT_GROUPS[$('unitType').value];
+        }
+
+        // called when the "what are you converting" box changes
+        function loadUnitType() {
+            const units = unitsOfType();
+            const names = units.map(u => u.n);
+            fillSelect($('unitFrom'), names, 0);
+            fillSelect($('unitTo'), names, Math.min(1, units.length - 1));
+            updateUnits();
+        }
+
+        let unitAnswer = null;   // last converted number (used by the "use answer" button)
+
+        function updateUnits() {
+            const units = unitsOfType();
+            const from = units[Number($('unitFrom').value)];
+            const to = units[Number($('unitTo').value)];
+            const raw = $('unitValue').value;
+            const value = parseFloat(raw);
+
+            if (raw.trim() === '' || Number.isNaN(value)) {
+                unitAnswer = null;
+                $('unitFromText').textContent = 'Type a value above';
+                $('unitToText').textContent = '–';
+                $('unitAll').innerHTML = '';
+                return;
+            }
+
+            const answer = clean(convertUnit(value, from, to));
+            unitAnswer = answer;
+            $('unitFromText').textContent = `${formatNumber(value)} ${from.n}  =`;
+            $('unitToText').textContent = `${formatNumber(answer)} ${to.n}`;
+
+            renderTiles($('unitAll'), units.map(u => {
+                const v = clean(convertUnit(value, from, u));
+                return { k: u.n, v: formatNumber(v), mode: 'insert', good: u === to };
+            }));
+        }
+
+        $('unitType').addEventListener('change', loadUnitType);
+        $('unitFrom').addEventListener('change', updateUnits);
+        $('unitTo').addEventListener('change', updateUnits);
+        $('unitValue').addEventListener('input', updateUnits);
+        $('unitSwap').addEventListener('click', () => {
+            const a = $('unitFrom').value;
+            $('unitFrom').value = $('unitTo').value;
+            $('unitTo').value = a;
+            updateUnits();
+        });
+        $('unitUse').addEventListener('click', () => {
+            if (unitAnswer === null) { toast('Type a value first'); return; }
+            useInCalculator(formatNumber(unitAnswer));
+        });
+
+        // fill the "what are you converting" box (this is the part that was missing before)
+        (function setupUnits() {
+            const select = $('unitType');
+            Object.keys(UNIT_GROUPS).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+            select.value = 'Length';
+            loadUnitType();
+        })();
+
+        /* =====================================================
+           14. CONSTANTS  (values from CODATA 2018 / SI 2019 and standard tables)
+           n = name, s = symbol, v = value, u = unit
+           ===================================================== */
+        const CONSTANT_GROUPS = [
+            {
+                group: 'Mathematics', items: [
+                    { n: 'Golden ratio', s: 'φ', v: '1.618033988749895', u: '' },
+                    { n: 'Square root of 2', s: '√2', v: '1.4142135623730951', u: '' },
+                    { n: 'Square root of 3', s: '√3', v: '1.7320508075688772', u: '' },
+                    { n: 'Natural log of 2', s: 'ln 2', v: '0.6931471805599453', u: '' },
+                    { n: 'Natural log of 10', s: 'ln 10', v: '2.302585092994046', u: '' },
+                    { n: 'Euler–Mascheroni constant', s: 'γ', v: '0.5772156649015329', u: '' }
+                ]
+            },
+            {
+                group: 'Universal physics', items: [
+                    { n: 'Speed of light in vacuum', s: 'c', v: '299792458', u: 'm/s' },
+                    { n: 'Planck constant', s: 'h', v: '6.62607015E-34', u: 'J·s' },
+                    { n: 'Reduced Planck constant', s: 'ħ', v: '1.054571817E-34', u: 'J·s' },
+                    { n: 'Gravitational constant', s: 'G', v: '6.67430E-11', u: 'm³/(kg·s²)' },
+                    { n: 'Elementary charge', s: 'e', v: '1.602176634E-19', u: 'C' },
+                    { n: 'Boltzmann constant', s: 'k', v: '1.380649E-23', u: 'J/K' },
+                    { n: 'Avogadro constant', s: 'Nₐ', v: '6.02214076E23', u: '1/mol' },
+                    { n: 'Universal gas constant', s: 'R', v: '8.314462618', u: 'J/(mol·K)' },
+                    { n: 'Stefan–Boltzmann constant', s: 'σ', v: '5.670374419E-8', u: 'W/(m²·K⁴)' },
+                    { n: 'Wien displacement constant', s: 'b', v: '2.897771955E-3', u: 'm·K' },
+                    { n: 'Fine-structure constant', s: 'α', v: '7.2973525693E-3', u: '' },
+                    { n: 'Planck length', s: 'lₚ', v: '1.616255E-35', u: 'm' },
+                    { n: 'Planck mass', s: 'mₚ', v: '2.176434E-8', u: 'kg' },
+                    { n: 'Planck time', s: 'tₚ', v: '5.391247E-44', u: 's' }
+                ]
+            },
+            {
+                group: 'Electricity and magnetism', items: [
+                    { n: 'Vacuum permittivity', s: 'ε₀', v: '8.8541878128E-12', u: 'F/m' },
+                    { n: 'Vacuum permeability', s: 'μ₀', v: '1.25663706212E-6', u: 'H/m' },
+                    { n: 'Coulomb constant (1/4πε₀)', s: 'kₑ', v: '8.9875517923E9', u: 'N·m²/C²' },
+                    { n: 'Impedance of free space', s: 'Z₀', v: '376.730313668', u: 'Ω' },
+                    { n: 'Faraday constant', s: 'F', v: '96485.33212', u: 'C/mol' },
+                    { n: 'Magnetic flux quantum', s: 'Φ₀', v: '2.067833848E-15', u: 'Wb' },
+                    { n: 'Conductance quantum', s: 'G₀', v: '7.748091729E-5', u: 'S' },
+                    { n: 'von Klitzing constant', s: 'Rₖ', v: '25812.80745', u: 'Ω' },
+                    { n: 'Bohr magneton', s: 'μB', v: '9.2740100783E-24', u: 'J/T' },
+                    { n: 'Nuclear magneton', s: 'μN', v: '5.0507837461E-27', u: 'J/T' }
+                ]
+            },
+            {
+                group: 'Atomic and nuclear', items: [
+                    { n: 'Electron mass', s: 'mₑ', v: '9.1093837015E-31', u: 'kg' },
+                    { n: 'Proton mass', s: 'mₚ', v: '1.67262192369E-27', u: 'kg' },
+                    { n: 'Neutron mass', s: 'mₙ', v: '1.67492749804E-27', u: 'kg' },
+                    { n: 'Atomic mass unit', s: 'u', v: '1.66053906660E-27', u: 'kg' },
+                    { n: 'Electron-volt', s: 'eV', v: '1.602176634E-19', u: 'J' },
+                    { n: 'Bohr radius', s: 'a₀', v: '5.29177210903E-11', u: 'm' },
+                    { n: 'Rydberg constant', s: 'R∞', v: '10973731.568160', u: '1/m' },
+                    { n: 'Classical electron radius', s: 'rₑ', v: '2.8179403262E-15', u: 'm' },
+                    { n: 'Compton wavelength (electron)', s: 'λc', v: '2.42631023867E-12', u: 'm' }
+                ]
+            },
+            {
+                group: 'Mechanics and thermodynamics', items: [
+                    { n: 'Standard gravity', s: 'g', v: '9.80665', u: 'm/s²' },
+                    { n: 'Standard atmosphere', s: 'atm', v: '101325', u: 'Pa' },
+                    { n: 'Zero Celsius in kelvin', s: 'T₀', v: '273.15', u: 'K' },
+                    { n: 'Molar volume of ideal gas (0 °C, 1 atm)', s: 'Vₘ', v: '0.02241396954', u: 'm³/mol' },
+                    { n: 'Calorie (thermochemical)', s: 'cal', v: '4.184', u: 'J' },
+                    { n: 'Horsepower (mechanical)', s: 'hp', v: '745.69987158', u: 'W' },
+                    { n: 'Specific heat of water', s: 'c_w', v: '4186', u: 'J/(kg·K)' },
+                    { n: 'Latent heat of fusion of ice', s: 'L_f', v: '3.34E5', u: 'J/kg' },
+                    { n: 'Latent heat of vaporisation of water', s: 'L_v', v: '2.257E6', u: 'J/kg' },
+                    { n: 'Density of water (about 4 °C)', s: 'ρ_w', v: '1000', u: 'kg/m³' },
+                    { n: 'Density of air (15 °C, sea level)', s: 'ρ_air', v: '1.225', u: 'kg/m³' },
+                    { n: 'Speed of sound in air (20 °C)', s: 'v_s', v: '343', u: 'm/s' },
+                    { n: 'Young’s modulus of steel (typical)', s: 'E_steel', v: '2.0E11', u: 'Pa' },
+                    { n: 'Young’s modulus of aluminium (typical)', s: 'E_Al', v: '6.9E10', u: 'Pa' },
+                    { n: 'Young’s modulus of copper (typical)', s: 'E_Cu', v: '1.17E11', u: 'Pa' },
+                    { n: 'Specific heat of copper', s: 'c_Cu', v: '385', u: 'J/(kg·K)' },
+                    { n: 'Specific heat of aluminium', s: 'c_Al', v: '897', u: 'J/(kg·K)' },
+                    { n: 'Thermal conductivity of copper', s: 'k_Cu', v: '401', u: 'W/(m·K)' },
+                    { n: 'Thermal conductivity of aluminium', s: 'k_Al', v: '237', u: 'W/(m·K)' },
+                    { n: 'Density of steel (typical)', s: 'ρ_steel', v: '7850', u: 'kg/m³' },
+                    { n: 'Density of copper', s: 'ρ_Cu', v: '8960', u: 'kg/m³' },
+                    { n: 'Density of aluminium', s: 'ρ_Al', v: '2700', u: 'kg/m³' },
+                    { n: 'Refractive index of water', s: 'n_w', v: '1.333', u: '' },
+                    { n: 'Refractive index of glass (typical)', s: 'n_g', v: '1.5', u: '' },
+                    { n: 'Reference sound intensity (0 dB)', s: 'I₀', v: '1.0E-12', u: 'W/m²' },
+                    { n: 'Reference sound pressure (0 dB)', s: 'p₀', v: '2.0E-5', u: 'Pa' }
+                ]
+            },
+            {
+                group: 'Electronics and materials', items: [
+                    { n: 'Thermal voltage kT/q at 300 K', s: 'V_T', v: '0.025852', u: 'V' },
+                    { n: 'Silicon band gap at 300 K', s: 'E_g(Si)', v: '1.12', u: 'eV' },
+                    { n: 'Germanium band gap at 300 K', s: 'E_g(Ge)', v: '0.66', u: 'eV' },
+                    { n: 'Intrinsic carrier density of Si, 300 K (typical)', s: 'nᵢ', v: '1.5E10', u: '1/cm³' },
+                    { n: 'Resistivity of copper (20 °C)', s: 'ρ_Cu', v: '1.68E-8', u: 'Ω·m' },
+                    { n: 'Resistivity of aluminium (20 °C)', s: 'ρ_Al', v: '2.82E-8', u: 'Ω·m' },
+                    { n: 'Resistivity of silver (20 °C)', s: 'ρ_Ag', v: '1.59E-8', u: 'Ω·m' },
+                    { n: 'Relative permittivity of silicon (typical)', s: 'ε_r(Si)', v: '11.7', u: '' }
+                ]
+            },
+            {
+                group: 'Chemistry', items: [
+                    { n: 'Ionic product of water (25 °C)', s: 'Kw', v: '1.0E-14', u: '' },
+                    { n: 'Standard pressure', s: 'P°', v: '100000', u: 'Pa' },
+                    { n: 'Molar mass constant', s: 'Mᵤ', v: '0.001', u: 'kg/mol' },
+                    { n: 'Gas constant in L·atm', s: 'R', v: '0.082057366', u: 'L·atm/(mol·K)' }
+                ]
+            },
+            {
+                group: 'Earth, Sun and space', items: [
+                    { n: 'Mass of Earth', s: 'M⊕', v: '5.9722E24', u: 'kg' },
+                    { n: 'Mean radius of Earth', s: 'R⊕', v: '6.371E6', u: 'm' },
+                    { n: 'Escape velocity of Earth', s: 'v_esc', v: '11186', u: 'm/s' },
+                    { n: 'Gravity on the Moon', s: 'g_moon', v: '1.62', u: 'm/s²' },
+                    { n: 'Mass of the Moon', s: 'M☾', v: '7.342E22', u: 'kg' },
+                    { n: 'Earth–Moon distance (mean)', s: 'd_moon', v: '3.844E8', u: 'm' },
+                    { n: 'Mass of the Sun', s: 'M☉', v: '1.98847E30', u: 'kg' },
+                    { n: 'Radius of the Sun', s: 'R☉', v: '6.957E8', u: 'm' },
+                    { n: 'Luminosity of the Sun', s: 'L☉', v: '3.828E26', u: 'W' },
+                    { n: 'Astronomical unit', s: 'AU', v: '1.495978707E11', u: 'm' },
+                    { n: 'Light-year', s: 'ly', v: '9.4607304725808E15', u: 'm' },
+                    { n: 'Parsec', s: 'pc', v: '3.0856775814914E16', u: 'm' }
+                ]
+            }
+        ];
+
+        function renderConstants() {
+            const list = $('constList');
+            const query = $('constSearch').value.trim().toLowerCase();
+            list.innerHTML = '';
+            let shown = 0;
+
+            CONSTANT_GROUPS.forEach(section => {
+                const matches = section.items.filter(c =>
+                    query === '' || (c.n + ' ' + c.s + ' ' + c.u + ' ' + section.group).toLowerCase().includes(query));
+                if (matches.length === 0) return;
+
+                const head = document.createElement('div');
+                head.className = 'const-group';
+                head.textContent = section.group;
+                list.appendChild(head);
+
+                matches.forEach(c => {
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'const-item';
+
+                    const name = document.createElement('span');
+                    name.className = 'name';
+                    name.textContent = c.n;
+                    const symbol = document.createElement('small');
+                    symbol.textContent = 'Symbol: ' + c.s;
+                    name.appendChild(symbol);
+
+                    const value = document.createElement('span');
+                    value.className = 'val';
+                    value.textContent = c.v.replace('E', ' × 10^');
+                    if (c.u) {
+                        const unit = document.createElement('small');
+                        unit.textContent = c.u;
+                        value.appendChild(unit);
+                    }
+
+                    item.append(name, value);
+                    item.addEventListener('click', () => useInCalculator(c.v, c.s + ' = ' + c.v));
+                    list.appendChild(item);
+                    shown++;
+                });
+            });
+
+            if (shown === 0) {
+                list.innerHTML = '<div class="empty-state"><span class="big-icon">🔍</span>No constant found.<br>Try another word, like “mass”, “charge” or “gas”.</div>';
+            }
+        }
+        $('constSearch').addEventListener('input', renderConstants);
+        renderConstants();
+
+        /* =====================================================
+           15. START
+           ===================================================== */
+        try {
+            history = JSON.parse(localStorage.getItem('calcHistory')) || [];
+            if (!Array.isArray(history)) history = [];
+            if (localStorage.getItem('calcTheme') === 'light') {
+                document.body.classList.add('light');
+                document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f1f3f4');
+            }
+        } catch (e) {
+            history = [];
+        }
+        renderHistory();
+        refreshKeys();
+        input.focus({ preventScroll: true });
+    </script>
+</body>
+
+</html>
